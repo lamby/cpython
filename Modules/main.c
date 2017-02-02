@@ -105,7 +105,8 @@ static const char usage_6[] =
 "   predictable seed.\n"
 "PYTHONMALLOC: set the Python memory allocators and/or install debug hooks\n"
 "   on Python memory allocators. Use PYTHONMALLOC=debug to install debug\n"
-"   hooks.\n";
+"   hooks.\n"
+"PYTHONREVERSEDICTKEYORDER: reverse ordering of dict keys, items, etc.\n";
 
 static int
 usage(int exitcode, const wchar_t* program)

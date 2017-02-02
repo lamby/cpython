@@ -394,6 +394,9 @@ If this is set to a non-empty string it is equivalent to specifying
 the \fB\-B\fP option (don't try to write
 .I .pyc
 files).
+.IP PYTHONREVERSEDICTKEYORDER
+If this is set to a non-empty string, reverse the order of that dict keys and
+items are returned. This is to help test for reproducible builds.
 .IP PYTHONINSPECT
 If this is set to a non-empty string it is equivalent to specifying
 the \fB\-i\fP option.

@@ -89,6 +89,7 @@ int Py_UseClassExceptionsFlag = 1; /* Needed by bltinmodule.c: deprecated */
 int Py_FrozenFlag; /* Needed by getpath.c */
 int Py_IgnoreEnvironmentFlag; /* e.g. PYTHONPATH, PYTHONHOME */
 int Py_DontWriteBytecodeFlag; /* Suppress writing bytecode files (*.py[co]) */
+int Py_ReverseDictKeyOrderFlag = 0; /* Reverse dict items/key ordering */
 int Py_NoUserSiteDirectory = 0; /* for -s and site.py */
 int Py_UnbufferedStdioFlag = 0; /* Unbuffered binary std{in,out,err} */
 int Py_HashRandomizationFlag = 0; /* for -R and PYTHONHASHSEED */
@@ -331,6 +332,8 @@ _Py_InitializeEx_Private(int install_sigs, int install_importlib)
         Py_OptimizeFlag = add_flag(Py_OptimizeFlag, p);
     if ((p = Py_GETENV("PYTHONDONTWRITEBYTECODE")) && *p != '\0')
         Py_DontWriteBytecodeFlag = add_flag(Py_DontWriteBytecodeFlag, p);
+    if ((p = Py_GETENV("PYTHONREVERSEDICTKEYORDER")) && *p != '\0')
+        Py_ReverseDictKeyOrderFlag = add_flag(Py_ReverseDictKeyOrderFlag, p);
     /* The variable is only tested for existence here; _PyRandom_Init will
        check its value further. */
     if ((p = Py_GETENV("PYTHONHASHSEED")) && *p != '\0')

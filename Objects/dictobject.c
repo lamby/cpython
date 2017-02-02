@@ -2984,11 +2984,19 @@ dict_popitem(PyDictObject *mp)
     }
     ENSURE_ALLOWS_DELETIONS(mp);
 
-    /* Pop last item */
     ep0 = DK_ENTRIES(mp->ma_keys);
-    i = mp->ma_keys->dk_nentries - 1;
-    while (i >= 0 && ep0[i].me_value == NULL) {
-        i--;
+    if (Py_ReverseDictKeyOrderFlag) {
+        /* Pop first item */
+        i = 0;
+        while (i < mp->ma_keys->dk_nentries && ep0[i].me_value == NULL) {
+            i++;
+        }
+    } else {
+        /* Pop last item */
+        i = mp->ma_keys->dk_nentries - 1;
+        while (i >= 0 && ep0[i].me_value == NULL) {
+            i--;
+        }
     }
     assert(i >= 0);
 
@@ -3448,7 +3456,7 @@ static PyObject*
 dictiter_iternextkey(dictiterobject *di)
 {
     PyObject *key;
-    Py_ssize_t i;
+    Py_ssize_t i, idx;
     PyDictKeysObject *k;
     PyDictObject *d = di->di_dict;
 
@@ -3465,18 +3473,22 @@ dictiter_iternextkey(dictiterobject *di)
 
     i = di->di_pos;
     k = d->ma_keys;
+    idx = Py_ReverseDictKeyOrderFlag ? (k->dk_nentries - i - 1) : i;
     assert(i >= 0);
     if (d->ma_values) {
         if (i >= d->ma_used)
             goto fail;
-        key = DK_ENTRIES(k)[i].me_key;
-        assert(d->ma_values[i] != NULL);
+        key = DK_ENTRIES(k)[idx].me_key;
+        assert(d->ma_values[idx] != NULL);
     }
     else {
         Py_ssize_t n = k->dk_nentries;
-        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(k)[i];
+        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(k)[idx];
         while (i < n && entry_ptr->me_value == NULL) {
-            entry_ptr++;
+            if (Py_ReverseDictKeyOrderFlag)
+                entry_ptr--;
+            else
+                entry_ptr++;
             i++;
         }
         if (i >= n)
@@ -3531,7 +3543,7 @@ static PyObject *
 dictiter_iternextvalue(dictiterobject *di)
 {
     PyObject *value;
-    Py_ssize_t i;
+    Py_ssize_t i, idx;
     PyDictObject *d = di->di_dict;
 
     if (d == NULL)
@@ -3546,18 +3558,22 @@ dictiter_iternextvalue(dictiterobject *di)
     }
 
     i = di->di_pos;
+    idx = Py_ReverseDictKeyOrderFlag ? (d->ma_keys->dk_nentries - i - 1) : i;
     assert(i >= 0);
     if (d->ma_values) {
         if (i >= d->ma_used)
             goto fail;
-        value = d->ma_values[i];
+        value = d->ma_values[idx];
         assert(value != NULL);
     }
     else {
         Py_ssize_t n = d->ma_keys->dk_nentries;
-        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(d->ma_keys)[i];
+        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(d->ma_keys)[idx];
         while (i < n && entry_ptr->me_value == NULL) {
-            entry_ptr++;
+            if (Py_ReverseDictKeyOrderFlag)
+                entry_ptr--;
+            else
+                entry_ptr++;
             i++;
         }
         if (i >= n)
@@ -3612,7 +3628,7 @@ static PyObject *
 dictiter_iternextitem(dictiterobject *di)
 {
     PyObject *key, *value, *result = di->di_result;
-    Py_ssize_t i;
+    Py_ssize_t i, idx;
     PyDictObject *d = di->di_dict;
 
     if (d == NULL)
@@ -3627,19 +3643,23 @@ dictiter_iternextitem(dictiterobject *di)
     }
 
     i = di->di_pos;
+    idx = Py_ReverseDictKeyOrderFlag ? (d->ma_keys->dk_nentries - i - 1) : i;
     assert(i >= 0);
     if (d->ma_values) {
         if (i >= d->ma_used)
             goto fail;
-        key = DK_ENTRIES(d->ma_keys)[i].me_key;
-        value = d->ma_values[i];
+        key = DK_ENTRIES(d->ma_keys)[idx].me_key;
+        value = d->ma_values[idx];
         assert(value != NULL);
     }
     else {
         Py_ssize_t n = d->ma_keys->dk_nentries;
-        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(d->ma_keys)[i];
+        PyDictKeyEntry *entry_ptr = &DK_ENTRIES(d->ma_keys)[idx];
         while (i < n && entry_ptr->me_value == NULL) {
-            entry_ptr++;
+            if (Py_ReverseDictKeyOrderFlag)
+                entry_ptr--;
+            else
+                entry_ptr++;
             i++;
         }
         if (i >= n)

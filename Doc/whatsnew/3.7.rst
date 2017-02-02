@@ -70,6 +70,16 @@ Summary -- Release highlights
 New Features
 ============
 
+* As part of the changes to use a :ref:`more compact representation
+  <whatsnew36-compactdict>` in Python 3.6, :ref:`dict <typesmapping>` keys are
+  returned in insertion order. However, in order to test for `Reproducible
+  Builds <https://reproducible-builds.org/>`_ it is convenient to be able to
+  reverse this ordering - testers can then run a build of an arbitrary Python
+  package both with and without the keys reversed and compare the results.
+
+  To enable this behaviour, set the :envvar:`PYTHONREVERSEDICTKEYORDER`
+  environment variable before running the interpreter. (Contributed by Chris
+  Lamb)
 
 
 Other Language Changes
