@@ -545,6 +545,13 @@ conflict.
 
    .. versionadded:: 2.6
 
+.. envvar:: PYTHONREVERSEDICTKEYORDER
+
+   If this is set to a non-empty string, Python will reverse the order that
+   dict keys/items are returned. This is to help test for `Reproducible Builds
+   <https://reproducible-builds.org/>`_.
+
+
 .. envvar:: PYTHONHASHSEED
 
    If this variable is set to ``random``, the effect is the same as specifying

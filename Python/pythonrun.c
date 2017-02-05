@@ -80,6 +80,7 @@ int Py_InspectFlag; /* Needed to determine whether to exit at SystemExit */
 int Py_NoSiteFlag; /* Suppress 'import site' */
 int Py_BytesWarningFlag; /* Warn on str(bytes) and str(buffer) */
 int Py_DontWriteBytecodeFlag; /* Suppress writing bytecode files (*.py[co]) */
+int Py_ReverseDictKeyOrderFlag; /* Reverse dict items/key ordering */
 int Py_UseClassExceptionsFlag = 1; /* Needed by bltinmodule.c: deprecated */
 int Py_FrozenFlag; /* Needed by getpath.c */
 int Py_UnicodeFlag = 0; /* Needed by compile.c */
@@ -186,6 +187,8 @@ Py_InitializeEx(int install_sigs)
         Py_OptimizeFlag = add_flag(Py_OptimizeFlag, p);
     if ((p = Py_GETENV("PYTHONDONTWRITEBYTECODE")) && *p != '\0')
         Py_DontWriteBytecodeFlag = add_flag(Py_DontWriteBytecodeFlag, p);
+    if ((p = Py_GETENV("PYTHONREVERSEDICTKEYORDER")) && *p != '\0')
+        Py_ReverseDictKeyOrderFlag = add_flag(Py_ReverseDictKeyOrderFlag, p);
     /* The variable is only tested for existence here; _PyRandom_Init will
        check its value further. */
     if ((p = Py_GETENV("PYTHONHASHSEED")) && *p != '\0')

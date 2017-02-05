@@ -113,6 +113,7 @@ PYTHONHASHSEED: if this variable is set to 'random', the effect is the same\n\
    as specifying the -R option: a random value is used to seed the hashes of\n\
    str, bytes and datetime objects.  It can also be set to an integer\n\
    in the range [0,4294967295] to get hash values with a predictable seed.\n\
+PYTHONREVERSEDICTKEYORDER: reverse ordering of dict keys, items, etc.\n\
 ";
 
 

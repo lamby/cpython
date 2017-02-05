@@ -1029,15 +1029,18 @@ PyDict_Next(PyObject *op, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue)
         return 0;
     ep = ((PyDictObject *)op)->ma_table;
     mask = ((PyDictObject *)op)->ma_mask;
-    while (i <= mask && ep[i].me_value == NULL)
+    Py_ssize_t idx = Py_ReverseDictKeyOrderFlag ? mask - i : i;
+    while (i <= mask && ep[idx].me_value == NULL) {
+        idx = (Py_ReverseDictKeyOrderFlag) ? idx - 1 : idx + 1;
         i++;
+    }
     *ppos = i+1;
     if (i > mask)
         return 0;
     if (pkey)
-        *pkey = ep[i].me_key;
+        *pkey = ep[idx].me_key;
     if (pvalue)
-        *pvalue = ep[i].me_value;
+        *pvalue = ep[idx].me_value;
     return 1;
 }
 
@@ -1056,16 +1059,19 @@ _PyDict_Next(PyObject *op, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue,
         return 0;
     ep = ((PyDictObject *)op)->ma_table;
     mask = ((PyDictObject *)op)->ma_mask;
-    while (i <= mask && ep[i].me_value == NULL)
+    Py_ssize_t idx = Py_ReverseDictKeyOrderFlag ? mask - i : i;
+    while (i <= mask && ep[idx].me_value == NULL) {
+        idx = (Py_ReverseDictKeyOrderFlag) ? idx - 1 : idx + 1;
         i++;
+    }
     *ppos = i+1;
     if (i > mask)
         return 0;
-    *phash = (long)(ep[i].me_hash);
+    *phash = (long)(ep[idx].me_hash);
     if (pkey)
-        *pkey = ep[i].me_key;
+        *pkey = ep[idx].me_key;
     if (pvalue)
-        *pvalue = ep[i].me_value;
+        *pvalue = ep[idx].me_value;
     return 1;
 }
 
@@ -1116,7 +1122,7 @@ dict_print(register PyDictObject *mp, register FILE *fp, register int flags)
     Py_END_ALLOW_THREADS
     any = 0;
     for (i = 0; i <= mp->ma_mask; i++) {
-        PyDictEntry *ep = mp->ma_table + i;
+        PyDictEntry *ep = mp->ma_table + ((Py_ReverseDictKeyOrderFlag) ? mp->ma_mask - i : i);
         PyObject *pvalue = ep->me_value;
         if (pvalue != NULL) {
             /* Prevent PyObject_Repr from deleting value during
@@ -1349,8 +1355,9 @@ dict_values(register PyDictObject *mp)
     ep = mp->ma_table;
     mask = mp->ma_mask;
     for (i = 0, j = 0; i <= mask; i++) {
-        if (ep[i].me_value != NULL) {
-            PyObject *value = ep[i].me_value;
+        Py_ssize_t idx = Py_ReverseDictKeyOrderFlag ? mask - i : i;
+        if (ep[idx].me_value != NULL) {
+            PyObject *value = ep[idx].me_value;
             Py_INCREF(value);
             PyList_SET_ITEM(v, j, value);
             j++;
@@ -1397,8 +1404,9 @@ dict_items(register PyDictObject *mp)
     ep = mp->ma_table;
     mask = mp->ma_mask;
     for (i = 0, j = 0; i <= mask; i++) {
-        if ((value=ep[i].me_value) != NULL) {
-            key = ep[i].me_key;
+        Py_ssize_t idx = Py_ReverseDictKeyOrderFlag ? mask - i : i;
+        if ((value=ep[idx].me_value) != NULL) {
+            key = ep[idx].me_key;
             item = PyList_GET_ITEM(v, j);
             Py_INCREF(key);
             PyTuple_SET_ITEM(item, 0, key);
@@ -2159,9 +2167,9 @@ dict_popitem(PyDictObject *mp)
          * or the table shrunk -- simply make sure it's in bounds now.
          */
         if (i > mp->ma_mask || i < 1)
-            i = 1;              /* skip slot 0 */
+            i = (Py_ReverseDictKeyOrderFlag) ? mp->ma_mask : 1;  /* skip slot 0 */
         while ((ep = &mp->ma_table[i])->me_value == NULL) {
-            i++;
+            i = (Py_ReverseDictKeyOrderFlag) ? i - 1 : i + 1;
             if (i > mp->ma_mask)
                 i = 1;
         }
@@ -2173,7 +2181,7 @@ dict_popitem(PyDictObject *mp)
     ep->me_value = NULL;
     mp->ma_used--;
     assert(mp->ma_table[0].me_value == NULL);
-    mp->ma_table[0].me_hash = i + 1;  /* next place to start */
+    mp->ma_table[0].me_hash = (Py_ReverseDictKeyOrderFlag) ? i - 1 : i + 1;  /* next place to start */
     return res;
 }
 
@@ -2620,13 +2628,16 @@ static PyObject *dictiter_iternextkey(dictiterobject *di)
         goto fail;
     ep = d->ma_table;
     mask = d->ma_mask;
-    while (i <= mask && ep[i].me_value == NULL)
+    Py_ssize_t idx = (Py_ReverseDictKeyOrderFlag) ? mask - i : i;
+    while (i <= mask && ep[idx].me_value == NULL) {
+        idx = (Py_ReverseDictKeyOrderFlag) ? idx - 1 : idx + 1;
         i++;
+    }
     di->di_pos = i+1;
     if (i > mask)
         goto fail;
     di->len--;
-    key = ep[i].me_key;
+    key = ep[idx].me_key;
     Py_INCREF(key);
     return key;
 
@@ -2692,7 +2703,9 @@ static PyObject *dictiter_iternextvalue(dictiterobject *di)
     if (i < 0 || i > mask)
         goto fail;
     ep = d->ma_table;
-    while ((value=ep[i].me_value) == NULL) {
+    Py_ssize_t idx = (Py_ReverseDictKeyOrderFlag) ? mask - i : i;
+    while ((value=ep[idx].me_value) == NULL) {
+        idx = (Py_ReverseDictKeyOrderFlag) ? idx - 1 : idx + 1;
         i++;
         if (i > mask)
             goto fail;
@@ -2764,8 +2777,11 @@ static PyObject *dictiter_iternextitem(dictiterobject *di)
         goto fail;
     ep = d->ma_table;
     mask = d->ma_mask;
-    while (i <= mask && ep[i].me_value == NULL)
+    Py_ssize_t idx = (Py_ReverseDictKeyOrderFlag) ? mask - i : i;
+    while (i <= mask && ep[idx].me_value == NULL) {
+        idx = (Py_ReverseDictKeyOrderFlag) ? idx - 1 : idx + 1;
         i++;
+    }
     di->di_pos = i+1;
     if (i > mask)
         goto fail;
@@ -2780,8 +2796,8 @@ static PyObject *dictiter_iternextitem(dictiterobject *di)
             return NULL;
     }
     di->len--;
-    key = ep[i].me_key;
-    value = ep[i].me_value;
+    key = ep[idx].me_key;
+    value = ep[idx].me_value;
     Py_INCREF(key);
     Py_INCREF(value);
     PyTuple_SET_ITEM(result, 0, key);

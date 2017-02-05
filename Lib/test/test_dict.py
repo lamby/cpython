@@ -1,3 +1,6 @@
+import os
+import sys
+import subprocess
 import unittest
 from test import test_support
 
@@ -689,6 +692,18 @@ class DictTest(unittest.TestCase):
         test_support.check_free_after_iterating(self, lambda d: iter(d.viewkeys()), dict)
         test_support.check_free_after_iterating(self, lambda d: iter(d.viewvalues()), dict)
         test_support.check_free_after_iterating(self, lambda d: iter(d.viewitems()), dict)
+
+
+    @unittest.skipUnless("PYTHONREVERSEDICTKEYORDER" not in os.environ,
+                         'avoid recursion')
+    def test_reverse(self):
+        """
+        Re-run all tests in this module (except this one) with
+        PYTHONREVERSEDICTKEYORDER set.
+        """
+        env = dict(os.environ)
+        env["PYTHONREVERSEDICTKEYORDER"] = "1"
+        subprocess.check_call((sys.executable, __file__), env=env)
 
 from test import mapping_tests
 
